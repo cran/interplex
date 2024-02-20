@@ -31,7 +31,7 @@ as_py_gudhi_simplextree.default <- function(x, ...) {
   x <- ensure_cmplx(x)
   x <- ensure_list(x)
   # import GUDHI
-  # -+- Is it possible to detect already imported, and as what? -+-
+  # TODO: Is it possible to detect already imported, and as what?
   gd <- reticulate::import("gudhi")
   
   # insert all simplices into a new simplex tree
@@ -48,21 +48,20 @@ as_py_gudhi_simplextree.Rcpp_SimplexTree <- function(x, ...) {
   
   # insert maximal simplices into a new simplex tree
   res <- gd$SimplexTree()
-  simplextree_version <- utils::packageVersion("simplextree")
-  if (simplextree_version >= "1.0.1") {
+  .simplextree_version <- utils::packageVersion("simplextree")
+  if (.simplextree_version >= "1.0.1") {
     # traverse insertion over maximal simplices
-    simplextree::traverse(
-      simplextree::maximal(x),
+    traverse <- utils::getFromNamespace("traverse", "simplextree")
+    maximal <- utils::getFromNamespace("maximal", "simplextree")
+    traverse(
+      maximal(x),
       function(s) res$insert(as.list(s))
     )
-  } else if (simplextree_version == "0.9.1") {
+  } else if (.simplextree_version == "0.9.1") {
     # loop insertion over serialization
     for (s in x$serialize()) res$insert(as.list(s))
   } else {
-    stop(
-      "No method available for simplextree v",
-      utils::packageVersion("simplextree")
-    )
+    stop("No method available for simplextree v", .simplextree_version)
   }
   
   res
